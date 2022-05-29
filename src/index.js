@@ -1,7 +1,13 @@
 /* eslint-disable comma-dangle */
 /* eslint-disable indent */
 import './style.scss';
-import { Scene, PerspectiveCamera, WebGLRenderer, Mesh } from 'three';
+import {
+  Scene,
+  PerspectiveCamera,
+  WebGLRenderer,
+  Mesh,
+  LoadingManager,
+} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -19,14 +25,13 @@ import { Clock } from 'three';
 import { BoxGeometry } from 'three';
 import { PCFSoftShadowMap } from 'three';
 
+let pageWrapper;
+let bar;
+
 window.onload = () => {
-  const loader = new RGBELoader();
-  const envTexture = loader.load(require('./asset/envmap.hdr'), (texture) => {
-    texture.mapping = EquirectangularReflectionMapping;
-    // scene.background = texture;
-    // scene.environment = texture;
-  });
-  //   equitriangle.hdr
+  pageWrapper = document.getElementById('page-wrapper');
+  bar = document.getElementById('bar');
+  const envTexture = null;
   const scene = new Scene();
   const camera = new PerspectiveCamera(
     75,
@@ -58,11 +63,20 @@ window.onload = () => {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFSoftShadowMap;
 
-  const map = new TextureLoader().load(require('./asset/earthmap.jpg'));
-  const roughness = new TextureLoader().load(require('./asset/earthspec.jpg'));
-  const bumpMap = new TextureLoader().load(require('./asset/earthbump.jpg'));
+  const manager = new LoadingManager();
+  manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+    bar.style.transform = `scaleX(${itemsLoaded / itemsTotal})`;
+  };
+  manager.onLoad = function () {
+    pageWrapper.style.display = 'none';
+  };
+  const textureLoader = new TextureLoader(manager);
 
-  const gltfLoader = new GLTFLoader();
+  const map = textureLoader.load(require('./asset/earthmap.jpg'));
+  const roughness = textureLoader.load(require('./asset/earthspec.jpg'));
+  const bumpMap = textureLoader.load(require('./asset/earthbump.jpg'));
+
+  const gltfLoader = new GLTFLoader(manager);
   let plane;
   let planesData = [];
   gltfLoader.load(require('./asset/plane/scene.glb'), (gltf) => {
@@ -71,26 +85,26 @@ window.onload = () => {
     // scene.add(plane.scene);
     planesData = [
       makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
-        makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
+      makePlane(plane, map, envTexture, scene),
     ];
   });
   //   console.log(plane);
@@ -126,7 +140,7 @@ window.onload = () => {
       plane.rotation.set(0, 0, 0);
       plane.updateMatrixWorld();
 
-        planeData.rot += delta * 0.15;
+      planeData.rot += delta * 0.15;
       plane.rotateOnAxis(planeData.randomAxis, planeData.randomAxisRot);
       plane.rotateOnAxis(new Vector3(0, 1, 0), planeData.rot);
       plane.rotateOnAxis(new Vector3(0, 0, 1), planeData.rad);
@@ -143,7 +157,7 @@ window.onload = () => {
 
 const makePlane = (planeMesh, trailTexture, envMap, scene) => {
   const plane = planeMesh.clone();
-    plane.scale.set(0.1, 0.1, 0.1);
+  plane.scale.set(0.1, 0.1, 0.1);
   plane.position.set(0, 0, 0);
   plane.rotation.set(0, 0, 0);
   plane.updateMatrixWorld();
